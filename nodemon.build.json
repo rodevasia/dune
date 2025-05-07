@@ -1,6 +1,0 @@
-{
-    "exec": "dub clean && rm -rf dune && dub --build=debug -- build",
-    "watch": ["source", "app.d", "dub.json"],
-    "ext": "d,ini,json"
-  }
-  

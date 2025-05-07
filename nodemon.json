@@ -1,6 +1,0 @@
-{
-    "exec": "dub clean && rm -rf dune && dub -- start --port=4500",
-    "watch": ["source", "app.d", "dub.json"],
-    "ext": "d,ini,json"
-  }
-  
