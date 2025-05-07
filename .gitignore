@@ -1,0 +1,16 @@
+.dub
+docs.json
+__dummy.html
+docs/
+/dune
+dune.so
+dune.dylib
+dune.dll
+dune.a
+dune.lib
+dune-test-*
+*.exe
+*.pdb
+*.o
+*.obj
+*.lst

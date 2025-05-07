@@ -1,0 +1,6 @@
+{
+    "files.associations": {
+        "*.dc": "coffeescript",
+        "quickjs.h": "c"
+    }
+}

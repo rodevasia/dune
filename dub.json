@@ -1,0 +1,22 @@
+{
+	"authors": [
+		"Robert Devasia"
+	],
+	"copyright": "Copyright © 2025, Robert Devasia",
+	"dependencies": {
+		"argparse": "~>1.4.1",
+		"handy-httpd": "~>8.5.0",
+		"htmld": "~>0.3.7",
+		"slf4d": "~>3.0.1"
+	},
+	"description": "A minimal static site generator",
+	"lflags": [
+		"-L/usr/local/lib/quickjs",
+		"-lquickjs"
+	],
+	"libs": [
+		"quickjs"
+	],
+	"license": "BSL-1.0",
+	"name": "dune"
+}
