@@ -47,10 +47,10 @@ struct Build
     string path;
 }
 
-@NamedArgument("preview")
-struct Preview
-{
-}
+// @NamedArgument("preview")
+// struct Preview
+// {
+// }
 
 struct TemplateException
 {

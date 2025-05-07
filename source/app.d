@@ -15,7 +15,7 @@ struct NoValue
 
 struct DuneArgs
 {
-  SumType!(NoValue, Init, Start, Build, Preview) command;
+  SumType!(NoValue, Init, Start, Build) command;
 }
 
 mixin CLI!DuneArgs.main!(parseArgs);
@@ -27,11 +27,11 @@ void parseArgs(DuneArgs args)
     (Init init) => initFn(init),
     (Start start) => startFn(start),
     (Build build) => buildFn(build),
-    (Preview preview) => previewFn(preview)
+    // (Preview preview) => previewFn(preview)
   );
 }
 
-void previewFn(Preview args)
-{
+// void previewFn(Preview args)
+// {
 
-}
+// }
