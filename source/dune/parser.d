@@ -2,11 +2,11 @@ module dune.parser;
 
 import std.json;
 import std.stdio : File, writeln;
-import std.array : empty, Appender;
+import std.array : empty, Appender, split;
 import std.conv : to;
 import std.path : buildPath;
-import std.string : replace;
-import std.regex : ctRegex, regex, replaceAll;
+import std.string : replace, indexOf;
+import std.regex : ctRegex, regex, replaceAll, matchAll;
 import std.file : read, readText, exists;
 
 import argparse;
@@ -68,9 +68,9 @@ struct HtmlResult
     TemplateException* exception;
 }
 
-HtmlResult* parseRoute(string path, string content = null)
+string parseRoute(string path, string content = null)
 {
-    TemplateException* exception = new TemplateException;
+
     try
     {
         string unHtml = content !is null ? content : path.readText;
@@ -84,7 +84,11 @@ HtmlResult* parseRoute(string path, string content = null)
                     key.destroy();
             }
         }
+
         string resu = executeScript(path, dom);
+        if (resu !is null)
+            dom = createDocument(resu);
+
         auto includes = dom.querySelectorAll("include");
         if (includes.empty)
             return null;
@@ -104,24 +108,40 @@ HtmlResult* parseRoute(string path, string content = null)
                 {
                     auto result = parseRoute(includePath, includeContent);
                     if (result is null)
-                        break;
-                    // dom = createDocument(dom.toString().replace(include.outerHTML, ));
+                        continue;
+                    dom = createDocument(dom.toString().replace(include.outerHTML, result));
                 }
             }
             else
             {
-                exception = new TemplateException;
-                exception.message = "File not found";
-                exception.filename = includePath;
-                exception.source = include.toString;
+                Log.logError("File not found", null, includePath);
             }
+        }
+        if (resu is null)
+        {
+            resu = executeScript(path, dom);
+            if (resu !is null)
+                dom = createDocument(resu);
+        }
+        auto rexpSick = regex(`\{[a-zA-Z_$][\w$]*\}`);
+        auto sickVars = dom.root.text.matchAll(rexpSick);
+        if (!sickVars.empty)
+        {
+            string msg = "";
+            foreach (key; sickVars)
+            {
+                auto lineNum = logLine(path, key.to!string);
+                msg ~= "variable " ~ key[0] ~ " is not defined or not available globally \n";
+                Log.logError(msg, null, path, null, null, lineNum);
+            }
+            return null;
         }
 
         auto rexp = regex(`<\/?root>`);
         string html = dom.toString();
         html = replaceAll(html, rexp, "");
-        HtmlResult* r = new HtmlResult(html, exception);
-        return r;
+
+        return html;
 
     }
     catch (Exception e)
@@ -133,12 +153,11 @@ HtmlResult* parseRoute(string path, string content = null)
             writeln(e);
         }
         Log.logError("Error while parsing");
-        HtmlResult* r = new HtmlResult("", exception);
-        return r;
+        return null;
     }
 }
 
-string executeScript(string path, Document dom)
+string executeScript(string path, Document dom,)
 {
     // Execute scripts
     auto scripts = dom.querySelectorAll("script[type='text/qjs']");
@@ -165,39 +184,25 @@ string executeScript(string path, Document dom)
             }
         }
     }
-    import std.regex : matchAll, regex, replaceAll;
-    import std.array : array;
-
-    auto rexpSick = regex(`\{[a-zA-Z_$][\w$]*\}`);
-    auto sickVars = dom.root.text.matchAll(rexpSick);
-    if (!sickVars.empty)
-    {
-        string msg = "";
-        foreach (key; sickVars)
-        {
-            logLine(path, key.to!string);
-            msg ~= "variable " ~ key[0] ~ " is not defined or not available globally \n";
-            Log.logError(msg);
-        }
-        return null;
-    }
     return dom.toString;
 }
 
-void logLine(string filename, string keyword)
+auto logLine(string filename, string keyword)
 {
     import std.array : array;
 
     auto lines = File(filename).byLine();
-    int lineNumber = 0;
-    int position = 0;
+    int lineNumber = 1;
+
     foreach (line; lines)
     {
-        line.writeln;
-        // auto pos = line
-        // if (pos != -1)
-        // {
-        //     writeln("Found '", keyword, "' at line ", index + 1, ", column ", pos + 1);
-        // }
+        auto rgx = regex(`\{[a-zA-Z_$][\w$]*\}`);
+        auto varMatch = line.matchAll(rgx);
+        if (!varMatch.empty)
+        {
+            return lineNumber;
+        }
+        lineNumber++;
     }
+    return -1;
 }

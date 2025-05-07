@@ -1,16 +1,18 @@
 module dune.args.build;
 
-import std.file;
+import std.file : write, mkdirRecurse, exists, dirEntries, SpanMode;
 import std.path;
 import std.compiler;
 import std.stdio;
 import std.string;
+import std.conv : to;
 
 import dune.parser;
 import dune.logger_provider;
 
 void buildFn(Build args)
 {
+    Log.config();
     string[] bp = args.path !is null ? args.path.split('/') : ["dist"];
     debug
     {
@@ -27,13 +29,13 @@ void buildFn(Build args)
 
     foreach (key; dirEntries(routesPath, SpanMode.depth))
     {
-        HtmlResult* r = parseRoute(key.name.buildPath);
-        debug r.html.writeln;
-        if (r.exception !is null)
+        auto r = parseRoute(key.name.buildPath);
+        if (r !is null)
         {
-            Log.logError(r.exception.message, null, r.exception.filename);
-            break;
+            string fileName = key.name.split("/")[$ - 1];
+            auto finalFile = bPath.buildPath(fileName);
+            finalFile.write(r);
         }
-        debug "============================================".writeln;
+
     }
 }

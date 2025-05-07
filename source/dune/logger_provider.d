@@ -3,6 +3,8 @@ module dune.logger_provider;
 import slf4d, slf4d.provider, slf4d.writer, slf4d.default_provider, slf4d
     .default_provider.formatters;
 
+import std.conv : to;
+
 class CustomProvider : LoggingProvider
 {
     Levels logLevel;
@@ -12,7 +14,7 @@ class CustomProvider : LoggingProvider
     this(Levels logLevel, string logpath = null, bool shortMode = false)
     {
         this.logLevel = logLevel;
-        LogHandler[] handlers = [new CustomLogHandler()];
+        LogHandler[] handlers = [new CustomLogHandler(shortMode)];
         if (logpath !is null && logpath.length > 0)
         {
             handlers ~= new SerializingLogHandler(
@@ -44,7 +46,9 @@ class CustomLogHandler : LogHandler
 
         if (!shortMode)
         {
-            writeln(formatLogLevel(msg.level, true) ~ " (" ~ msg.sourceContext.moduleName ~ ")" ~ ": " ~ msg
+
+            writeln(msg.sourceContext.moduleName ~ "(" ~ msg.sourceContext.lineNumber.to!string ~ "):" ~ formatLogLevel(
+                    msg.level, true) ~ ": " ~ msg
                     .message);
         }
         else
@@ -57,9 +61,10 @@ class CustomLogHandler : LogHandler
 
 struct Log
 {
-    this(bool shortMode)
+
+    static void config(bool shortMode = false, string filepath = null)
     {
-        auto custom = new CustomProvider(Levels.TRACE);
+        auto custom = new CustomProvider(Levels.TRACE, filepath, shortMode);
         configureLoggingProvider(custom);
     }
 

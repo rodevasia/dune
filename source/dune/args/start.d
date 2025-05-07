@@ -94,12 +94,8 @@ private void handle(ref HttpRequestContext ctx)
   {
     filePath.writeln;
     auto html = parseRoute(filePath);
-    if (html.exception !is null)
-    {
-      ctx.response.writeBodyString(html.exception.message);
-    }
-    else
-      ctx.response.writeBodyString(html.html, "text/html");
+    if (html !is null)
+      ctx.response.writeBodyString(html, "text/html");
   }
   else
   {
