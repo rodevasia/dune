@@ -15,4 +15,4 @@ dune-test-*
 *.obj
 *.lst
 nodemon.*
-./a/
+a/

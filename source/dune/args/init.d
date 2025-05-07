@@ -1,24 +1,24 @@
 module dune.args.init;
 
-import std.stdio : write,writeln, readln;
-alias display= write;
-import std.file : exists, mkdir, mkdirRecurse, rmdirRecurse, write;
-import std.path : buildPath;
-
 import dune.parser;
 
 void initFn(Init args)
 {
+    import std.file : exists;
 
     if (exists(args.name))
     {
+        import std.stdio : write, writeln, readln;
+
         "Directory already exists".writeln;
-        "Do you want to delete and create new (Y/n) : ".display;
+        "Do you want to delete and create new (Y/n) : ".write;
         auto choice = readln();
         import std.string : toLower, strip;
 
         if (choice.toLower().strip() == "y")
         {
+            import std.file : rmdirRecurse;
+
             args.name.rmdirRecurse;
             createProject(args);
         }
@@ -29,9 +29,14 @@ void initFn(Init args)
     }
     else
     {
-        if(args.name.length){
+        if (args.name.length)
+        {
             createProject(args);
-        }else{
+        }
+        else
+        {
+            import std.stdio : writeln;
+
             "Please provide a valid project name".writeln;
             return;
         }
@@ -40,6 +45,9 @@ void initFn(Init args)
 
 private void createProject(Init args)
 {
+    import std.file : exists, mkdir, mkdirRecurse, rmdirRecurse, write;
+    import std.path : buildPath;
+
     args.name.mkdir;
     assert(args.name.exists);
     foreach (dir; ["routes", "assets"])
