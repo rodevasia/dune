@@ -58,7 +58,7 @@ private void createProject(Init args)
     }
     auto mainRoute = args.name.buildPath("routes", "index.html");
     foreach (assetDir, asset; [
-            "scripts": ["main.js", "const title=`Document`;"],
+            "scripts": ["main.js", "globalThis.title=`Document`;"],
             "styles": ["index.css"]
         ])
     {

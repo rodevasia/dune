@@ -37,7 +37,7 @@ class CustomLogHandler : LogHandler
     private bool shortMode;
     this(bool shortMode = false)
     {
-        shortMode = shortMode;
+        this.shortMode = shortMode;
     }
 
     void handle(immutable LogMessage msg)
@@ -62,9 +62,10 @@ class CustomLogHandler : LogHandler
 struct Log
 {
 
-    static void config(bool shortMode = false, string filepath = null)
+    static void config(bool shortMode = false, string filepath = null, Levels logLevel = Levels
+            .DEBUG)
     {
-        auto custom = new CustomProvider(Levels.TRACE, filepath, shortMode);
+        auto custom = new CustomProvider(logLevel, filepath, shortMode);
         configureLoggingProvider(custom);
     }
 

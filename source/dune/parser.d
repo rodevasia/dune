@@ -64,25 +64,22 @@ struct TemplateException
 
 struct HtmlResult
 {
-    string html;
-    TemplateException* exception;
+    string output;
+    bool isException = true;
 }
 
-string parseRoute(string path, string content = null)
+HtmlResult parseRoute(string path, string content = null)
 {
 
     try
     {
+        HtmlResult _htmlResult = HtmlResult.init;
         string unHtml = content !is null ? content : path.readText;
         Document dom = createDocument(unHtml);
-        Node _body = dom.querySelector("body");
-        if (_body !is null)
+        foreach (key; dom.root.children)
         {
-            foreach (key; _body.children)
-            {
-                if (key.isCommentNode)
-                    key.destroy();
-            }
+            if (key.isCommentNode)
+                key.destroy();
         }
 
         string resu = executeScript(path, dom);
@@ -90,33 +87,37 @@ string parseRoute(string path, string content = null)
             dom = createDocument(resu);
 
         auto includes = dom.querySelectorAll("include");
-        if (includes.empty)
-            return null;
-        foreach (Node include; includes)
-        {
-            string filename = cast(string) include["src"];
-            auto includePath = filename.buildPath;
-            debug
+        if (!includes.empty)
+            foreach (Node include; includes)
             {
-                includePath = "a".buildPath(filename);
-            }
-
-            if (includePath.exists)
-            {
-                string includeContent = cast(string) includePath.read;
-                if (include.isElementNode)
+                string filename = cast(string) include["src"];
+                auto includePath = filename.buildPath;
+                debug
                 {
-                    auto result = parseRoute(includePath, includeContent);
-                    if (result is null)
-                        continue;
-                    dom = createDocument(dom.toString().replace(include.outerHTML, result));
+                    includePath = "a".buildPath(filename);
+                }
+
+                if (includePath.exists)
+                {
+                    string includeContent = cast(string) includePath.read;
+                    if (include.isElementNode)
+                    {
+                        auto result = parseRoute(includePath, includeContent);
+                        if (result.isException)
+                        {
+                            Log.logError("File " ~ includePath ~ " not found", null, path);
+                            return result;
+                        }
+                        dom = createDocument(dom.toString()
+                                .replace(include.outerHTML, result.output));
+                    }
+                }
+                else
+                {
+                    return HtmlResult(path ~ ": File " ~ includePath ~ " not found");
                 }
             }
-            else
-            {
-                Log.logError("File not found", null, includePath);
-            }
-        }
+
         if (resu is null)
         {
             resu = executeScript(path, dom);
@@ -128,20 +129,24 @@ string parseRoute(string path, string content = null)
         if (!sickVars.empty)
         {
             string msg = "";
+            string exceptionMsg = "";
             foreach (key; sickVars)
             {
                 auto lineNum = logLine(path, key.to!string);
                 msg ~= "variable " ~ key[0] ~ " is not defined or not available globally \n";
+                exceptionMsg ~= path ~ "(" ~ lineNum.to!string ~ "): " ~ msg ~ "\n";
                 Log.logError(msg, null, path, null, null, lineNum);
             }
-            return null;
+            _htmlResult.output = exceptionMsg;
+            return _htmlResult;
         }
 
         auto rexp = regex(`<\/?root>`);
         string html = dom.toString();
         html = replaceAll(html, rexp, "");
-
-        return html;
+        _htmlResult.output = html;
+        _htmlResult.isException = false;
+        return _htmlResult;
 
     }
     catch (Exception e)
@@ -153,7 +158,7 @@ string parseRoute(string path, string content = null)
             writeln(e);
         }
         Log.logError("Error while parsing");
-        return null;
+        return HtmlResult.init;
     }
 }
 

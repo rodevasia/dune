@@ -30,11 +30,11 @@ void buildFn(Build args)
     foreach (key; dirEntries(routesPath, SpanMode.depth))
     {
         auto r = parseRoute(key.name.buildPath);
-        if (r !is null)
+        if (!r.isException)
         {
             string fileName = key.name.split("/")[$ - 1];
             auto finalFile = bPath.buildPath(fileName);
-            finalFile.write(r);
+            finalFile.write(r.output);
         }
 
     }

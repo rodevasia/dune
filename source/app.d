@@ -5,8 +5,8 @@ import argparse;
 import dune.parser;
 import dune.args.init : initFn;
 import dune.args.start;
-import std;
 import dune.args.build;
+import dune.logger_provider;
 
 @Command("help")
 struct NoValue
@@ -27,11 +27,5 @@ void parseArgs(DuneArgs args)
     (Init init) => initFn(init),
     (Start start) => startFn(start),
     (Build build) => buildFn(build),
-    // (Preview preview) => previewFn(preview)
   );
 }
-
-// void previewFn(Preview args)
-// {
-
-// }
